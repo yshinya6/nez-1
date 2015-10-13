@@ -9,27 +9,33 @@ File
 	= _ Root _
 
 Root 
-	= { (@ClassDeclaration)+ #Root }
+	= { $(StructDeclaration)+ #Root }
 
 /*////////////////////////////////////////////////
 ////////////////// Declaration ///////////////////
 ////////////////////////////////////////////////*/
 
-ClassDeclaration
-	= { 'struct' _ $Name(Name) _ '=' _ (@ClassMembers)+ _ #Struct}
+StructDeclaration
+	= { $(StructModifiers)? "struct" $Name(Name) "=" $(StructMembers)+ #Struct} _
 
-ClassMembers
+StructMembers
 	= TypedParameter / UntypedParameter 
 
+StructModifiers
+	= {$(StructModifier) $(StructModifier)* #Modifiers}
+
+StructModifier
+	= { "ordered" #Ordered} _
+	
 TypedParameter
-	=  { $Name(Name) qualifier ':' _ $Type(TypeDeclaration) @DefaultValue } _ 
+	=  { $Name(Name) qualifier ":" $Type(TypeDeclaration RangeDeclaration? ) _ $Value(DefaultValue)? } _ 
 
 qualifier
 	= '?' #Option
 	/ ''  #Required
 
 UntypedParameter 
-	= { @Name untypedqualifier _ @DefaultValue  } _ 
+	= { $Name(Name) untypedqualifier _ $Value(DefaultValue) } _ 
 
 untypedqualifier
 	= '?' #UntypedOption
@@ -42,27 +48,36 @@ TypeDeclaration
 	/ ClassType
 	
 ArrayType
-	= { (@PrimaryType / @ClassType) '[' ']' #TArray }
+	= { ($(PrimaryType) / $(ClassType)) "[" $Size(ArraySize)? "]" #TArray }
+
+ArraySize
+	= { DECIMAL #ArraySize } _
 
 PrimaryType
-	= 'boolean'{       #TBoolean}
-	/ 'int'    {       #TInteger} 
-	/ 'float'  {       #TFloat}
-	/ 'string' {       #TString}
-	/ 'any'    {       #TAny}
-	/ 'object' {       #TObject}
+	= "boolean"{       #TBoolean}
+	/ "int"    {       #TInteger} 
+	/ "float"  {       #TFloat}
+	/ "string" {       #TString}
+	/ "any"    {       #TAny}
+	/ "object" {       #TObject}
 
 ClassType 
-	= { NAMETOKEN #TStruct }
+	= { NAMETOKEN #TStruct } _
 
+RangeDeclaration
+	= {$ "(" $Min(Range) ".." $Max(Range) ")" #RangedType }
+	
+Range
+	= { DECIMAL #Range } _
+	
 DefaultValue 
-	= {(  _ '=' _ (@Literal / @FieldReference) (_ ',' _ (@Literal / @FieldReference) )* )? #DefaultValue}
+	= { "=" ($(Literal) / $(FieldReference)) (_ "," ($(Literal) / $(FieldReference)) )* #DefaultValue}
 
 EnumType
-	= { 'enum' _ '{' _ @EnumValue _ (',' _ @EnumValue _ )* '}' _ #TEnum }
+	= { "enum" "{" $(EnumValue) _ ("," $(EnumValue) _ )* "}" #TEnum }
 
 FieldReference 
-	= { @Name '.' @Name #FieldReference }
+	= { $(Name) '.' $(Name) #FieldReference }
 
 Literal 
 	= Float
@@ -72,6 +87,11 @@ Literal
 
 EnumValue
 	=  {'"' STRING_CONTENT* '"' #EnumValue } 
+
+example StructMembers '''
+age:int(0..100)
+'''
+
 
 /*////////////////////////////////////////////////
 //////////////////// Literal /////////////////////
@@ -142,7 +162,7 @@ HEX_ESCAPE
 	= '\\' 'u'+ HEX4
 	
 Name
-	= { !KEYWORD NAMETOKEN #Name }
+	= { !KEYWORD NAMETOKEN #Name } _
 
 NAMETOKEN
 	= [A-Za-z] ( '-' / [A-Za-z0-9_])*
@@ -156,25 +176,41 @@ HEX
 HEX4
 	= HEX HEX HEX HEX
 
+W
+	= [a-zA-Z0-9_$]
+
 KEYWORD
 	= 'struct'
 	/ 'enum'
+	/ 'ordered'
 	
 
 /*////////////////////////////////////////////////
 //////////////////// Keyword /////////////////////
 ////////////////////////////////////////////////*/
 
-"boolean" = 'boolean' _
-"int"     = 'int' _
-"float"   = 'float' _
-"string"  = 'string' _
-"any"     = 'any' _
-"class"   = 'class' _
-"enum"    = 'enum' _
+"boolean" = 'boolean' !W _
+"int"     = 'int' !W _
+"float"   = 'float' !W _
+"string"  = 'string' !W _
+"any"     = 'any' !W _
+"enum"    = 'enum' !W _
+"struct"  = 'struct' !W _
+"ordered" = 'ordered' !W _
+"{"       = '{' _
+"}"       = '}' _
+"["       = '[' _
+"]"       = ']' _
+"("       = '(' _
+")"       = ')' _
+","       = ',' _
+":"       = ':' _
+"="       = '=' _
+".."      = '..' _
+
 
 /*////////////////////////////////////////////////
-//////////////////// Rayout //////////////////////
+//////////////////// Layout //////////////////////
 ////////////////////////////////////////////////*/
 _
 	= (S / BLOCKCOMMENT / LINECOMMENT )*

@@ -11,8 +11,7 @@ public class JSONSchemaGrammarGenerator extends SchemaGrammarGenerator {
 
 	@Override
 	public void loadPredefinedRules() {
-		JSONPredefinedGrammar pre = new JSONPredefinedGrammar(gfile);
-		pre.define();
+		new JSONGrammarCombinator(gfile);
 	}
 
 	@Override
@@ -24,47 +23,49 @@ public class JSONSchemaGrammarGenerator extends SchemaGrammarGenerator {
 	}
 
 	@Override
-	public void newElement(String elementName, Type t) {
-		Expression[] l = { _DQuat(), t.getTypeExpression(), _DQuat(), _S(), _NonTerminal("NAMESEP"), t.next().getTypeExpression(), _Option(_NonTerminal("VALUESEP")), _S() };
-		gfile.addProduction(null, elementName, _Sequence(l));
+	public Element newElement(String elementName, String structName, Schema t) {
+		Expression seq = _Sequence(_DQuat(), t.getSchemaExpression(), _DQuat(), _S(), _NonTerminal("NAMESEP"), t.next().getSchemaExpression(), _Option(_NonTerminal("VALUESEP")), _S());
+		Element element = new Element(elementName, structName, seq, false);
+		gfile.addProduction(null, element.getUniqueName(), seq);
+		return element;
 	}
 
 	@Override
-	public void newStruct(String structName, Type t) {
-		Expression[] l = { _OpenWave(), _S(), t.getTypeExpression(), _S(), _CloseWave(), _S() };
+	public void newStruct(String structName, Schema t) {
+		Expression[] l = { _OpenWave(), _S(), t.getSchemaExpression(), _S(), _CloseWave(), _S() };
 		gfile.addProduction(null, structName, _Sequence(l));
 	}
 
 	@Override
-	public Type newTObject() {
-		return new Type(_NonTerminal("JSONObject"));
+	public Schema newTObject() {
+		return new Schema(_NonTerminal("JSONObject"));
 	}
 
 	@Override
-	public Type newTStruct(String structName) {
-		return new Type(_NonTerminal(structName));
+	public Schema newTStruct(String structName) {
+		return new Schema(_NonTerminal(structName));
 	}
 
 	@Override
-	public Type newTArray(Type t) {
-		Expression tExpr = t.getTypeExpression();
+	public Schema newTArray(Schema t) {
+		Expression tExpr = t.getSchemaExpression();
 		Expression[] array = { _OpenSquare(), _S(), tExpr, _ZeroMore(_NonTerminal("VALUESEP"), tExpr), _CloseSquare() };
-		return new Type(_Sequence(array));
+		return new Schema(_Sequence(array));
 	}
 
 	@Override
-	public Type newTEnum(String[] candidates) {
+	public Schema newTEnum(String[] candidates) {
 		Expression[] choice = new Expression[candidates.length];
 		int index = 0;
 		for (String cand : candidates) {
 			choice[index++] = _String(cand);
 		}
-		return new Type(_Choice(choice));
+		return new Schema(_Choice(choice));
 	}
 
 	@Override
-	public Type newOthers() {
-		return new Type(_NonTerminal("Member"));
+	public Schema newOthers() {
+		return new Schema(_NonTerminal("Member"));
 	}
 
 	private final Expression _OpenSquare() {

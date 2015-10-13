@@ -8,9 +8,10 @@ import nez.Strategy;
 import nez.ast.Symbol;
 import nez.ast.Tree;
 import nez.lang.GrammarFileLoader;
+import nez.lang.schema.Element;
 import nez.lang.schema.JSONSchemaGrammarGenerator;
+import nez.lang.schema.Schema;
 import nez.lang.schema.SchemaGrammarGenerator;
-import nez.lang.schema.Type;
 import nez.util.ConsoleUtils;
 
 public class Gcelery extends GrammarFileLoader {
@@ -26,7 +27,7 @@ public class Gcelery extends GrammarFileLoader {
 		}
 
 		@Override
-		public Type toSchema(Tree<?> node) {
+		public Schema toSchema(Tree<?> node) {
 			ConsoleUtils.println(node.formatSourceMessage("error", "unsupproted in Celery #" + node));
 			return null;
 		}
@@ -59,7 +60,7 @@ public class Gcelery extends GrammarFileLoader {
 		find(node.getTag().toString()).accept(node);
 	}
 
-	private final Type toType(Tree<?> node) {
+	private final Schema toType(Tree<?> node) {
 		return find(node.getTag().toString()).toSchema(node);
 	}
 
@@ -116,8 +117,8 @@ public class Gcelery extends GrammarFileLoader {
 		@Override
 		public void accept(Tree<?> node) {
 			String elementName = node.getText(_Name, "");
-			schema.addRequired(elementName);
-			schema.newElement(getUniqueName(elementName), schema.newUniq(elementName, toType(node.get(_Type))));
+			Element element = schema.newElement(elementName, currentStructName, schema.newUniq(elementName, toType(node.get(_Type))));
+			schema.addRequired(element);
 		}
 	}
 
@@ -125,14 +126,15 @@ public class Gcelery extends GrammarFileLoader {
 		@Override
 		public void accept(Tree<?> node) {
 			String elementName = node.getText(_Name, "");
-			schema.addMember(elementName);
-			schema.newElement(getUniqueName(elementName), schema.newUniq(elementName, toType(node.get(_Type))));
+			Element element = schema.newElement(elementName, currentStructName, schema.newUniq(elementName, toType(node.get(_Type))));
+			element.setOptional(true);
+			schema.addElement(element);
 		}
 	}
 
 	public class _Type extends Undefined {
 		@Override
-		public Type toSchema(Tree<?> node) {
+		public Schema toSchema(Tree<?> node) {
 			ConsoleUtils.println(node.formatSourceMessage("error", "unsupproted type #" + node));
 			return null;
 		}
@@ -140,7 +142,7 @@ public class Gcelery extends GrammarFileLoader {
 
 	public final class TObject extends _Type {
 		@Override
-		public Type toSchema(Tree<?> node) {
+		public Schema toSchema(Tree<?> node) {
 			if (node.has(_Range)) {
 				int min = Integer.parseInt(node.getText(_Min, ""));
 				int max = Integer.parseInt(node.getText(_Max, ""));
@@ -152,21 +154,21 @@ public class Gcelery extends GrammarFileLoader {
 
 	public final class TStruct extends _Type {
 		@Override
-		public Type toSchema(Tree<?> node) {
+		public Schema toSchema(Tree<?> node) {
 			return schema.newTStruct(node.toText());
 		}
 	}
 
 	public final class TAny extends _Type {
 		@Override
-		public Type toSchema(Tree<?> node) {
+		public Schema toSchema(Tree<?> node) {
 			return schema.newTAny();
 		}
 	}
 
 	public final class TArray extends _Type {
 		@Override
-		public Type toSchema(Tree<?> node) {
+		public Schema toSchema(Tree<?> node) {
 			if (node.has(_Range)) {
 				int min = Integer.parseInt(node.getText(_Min, ""));
 				int max = Integer.parseInt(node.getText(_Max, ""));
@@ -178,7 +180,7 @@ public class Gcelery extends GrammarFileLoader {
 
 	public final class TEnum extends _Type {
 		@Override
-		public Type toSchema(Tree<?> node) {
+		public Schema toSchema(Tree<?> node) {
 			String[] candidates = new String[node.size()];
 			int index = 0;
 			for (Tree<?> subnode : node) {
@@ -190,7 +192,7 @@ public class Gcelery extends GrammarFileLoader {
 
 	public final class TInteger extends _Type {
 		@Override
-		public Type toSchema(Tree<?> node) {
+		public Schema toSchema(Tree<?> node) {
 			if (node.has(_Range)) {
 				int min = Integer.parseInt(node.getText(_Min, ""));
 				int max = Integer.parseInt(node.getText(_Max, ""));
@@ -202,7 +204,7 @@ public class Gcelery extends GrammarFileLoader {
 
 	public final class TFloat extends _Type {
 		@Override
-		public Type toSchema(Tree<?> node) {
+		public Schema toSchema(Tree<?> node) {
 			if (node.has(_Range)) {
 				float min = Float.parseFloat(node.getText(_Min, ""));
 				float max = Float.parseFloat(node.getText(_Max, ""));
@@ -214,7 +216,7 @@ public class Gcelery extends GrammarFileLoader {
 
 	public final class TString extends _Type {
 		@Override
-		public Type toSchema(Tree<?> node) {
+		public Schema toSchema(Tree<?> node) {
 			if (node.has(_Length)) {
 				int min = Integer.parseInt(node.getText(_Min, ""));
 				int max = Integer.parseInt(node.getText(_Max, ""));
@@ -236,10 +238,6 @@ public class Gcelery extends GrammarFileLoader {
 
 	private final void genStruct_Approximate(String structName) {
 		schema.newStruct(structName, schema.newPermutation());
-	}
-
-	private final String getUniqueName(String localName) {
-		return currentStructName + "_" + localName;
 	}
 
 }

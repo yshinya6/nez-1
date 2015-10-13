@@ -11,7 +11,7 @@ import nez.ast.SourcePosition;
 import nez.ast.Tree;
 import nez.io.SourceContext;
 import nez.lang.GrammarFileLoader.DefaultVisitor;
-import nez.lang.schema.Type;
+import nez.lang.schema.Schema;
 import nez.util.ConsoleUtils;
 import nez.util.ExtensionLoader;
 import nez.util.StringUtils;
@@ -50,7 +50,7 @@ public abstract class GrammarFileLoader extends VisitorMap<DefaultVisitor> {
 			return false;
 		}
 
-		public Type toSchema(Tree<?> node) {
+		public Schema toSchema(Tree<?> node) {
 			ConsoleUtils.println(node.formatSourceMessage("error", "unsupproted in GrammarFileLoader #" + node));
 			return null;
 		}
