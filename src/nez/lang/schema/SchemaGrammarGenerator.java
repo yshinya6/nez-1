@@ -131,8 +131,8 @@ public abstract class SchemaGrammarGenerator extends AbstractSchemaGrammarGenera
 		return ExpressionCommons.newTlink(null, label, e);
 	}
 
-	protected final Expression _New(int shift) {
-		return ExpressionCommons.newTnew(null, shift);
+	protected final Expression _New(Expression... seq) {
+		return ExpressionCommons.newNewCapture(null, false, null, _Sequence(seq));
 	}
 
 	protected final Expression _LeftFold(Symbol label, int shift) {
@@ -143,8 +143,8 @@ public abstract class SchemaGrammarGenerator extends AbstractSchemaGrammarGenera
 		return ExpressionCommons.newTcapture(null, shift);
 	}
 
-	protected final Expression _Tag(Symbol tag) {
-		return ExpressionCommons.newTtag(null, tag);
+	protected final Expression _Tag(String tag) {
+		return ExpressionCommons.newTtag(null, Symbol.tag(tag));
 	}
 
 	protected final Expression _Replace(String msg) {
@@ -183,12 +183,13 @@ public abstract class SchemaGrammarGenerator extends AbstractSchemaGrammarGenera
 
 	@Override
 	public void newMembers(String memberListName) {
-		Expression[] l = new Expression[elementList.size() + 1];
+		Expression[] l = new Expression[elementList.size()];
 		int index = 0;
 		for (Element element : elementList) {
-			l[index++] = _NonTerminal(element.getUniqueName());
+			l[index++] = _Link(null, _NonTerminal(element.getUniqueName()));
 		}
-		l[index] = newOthers().getSchemaExpression();
+
+		// l[index] = _Link(null, newOthers().getSchemaExpression());
 		gfile.addProduction(null, memberListName, _ZeroMore(_Choice(l)));
 	}
 
@@ -293,7 +294,7 @@ public abstract class SchemaGrammarGenerator extends AbstractSchemaGrammarGenera
 
 	@Override
 	public Schema newTInteger() {
-		return new Schema(_NonTerminal("INT"));
+		return new Schema(_NonTerminal("Integer"));
 	}
 
 	@Override
@@ -304,7 +305,7 @@ public abstract class SchemaGrammarGenerator extends AbstractSchemaGrammarGenera
 
 	@Override
 	public Schema newTFloat() {
-		return new Schema(_NonTerminal("Number"));
+		return new Schema(_NonTerminal("Float"));
 	}
 
 	@Override

@@ -1,5 +1,6 @@
 package nez.lang.schema;
 
+import nez.ast.Symbol;
 import nez.lang.Expression;
 import nez.lang.GrammarFile;
 
@@ -9,6 +10,10 @@ public class JSONSchemaGrammarGenerator extends SchemaGrammarGenerator {
 		super(gfile);
 	}
 
+	static final Symbol _Key = Symbol.tag("key");
+	static final Symbol _Value = Symbol.tag("value");
+	static final Symbol _Member = Symbol.tag("member");
+
 	@Override
 	public void loadPredefinedRules() {
 		new JSONGrammarCombinator(gfile);
@@ -16,15 +21,15 @@ public class JSONSchemaGrammarGenerator extends SchemaGrammarGenerator {
 
 	@Override
 	public void newRoot(String structName) {
-		Expression root = _NonTerminal(structName);
+		Expression root = _Link(null, _NonTerminal(structName));
 		Expression[] seq = { _NonTerminal("VALUESEP"), root };
 		Expression[] array = { _OpenSquare(), _S(), root, _S(), _OneMore(seq), _S(), _CloseSquare() };
-		gfile.addProduction(null, "Root", _Choice(_Sequence(root), _Sequence(array)));
+		gfile.addProduction(null, "Root", _New(_Choice(_Sequence(root), _Sequence(array)), _Tag("Root")));
 	}
 
 	@Override
 	public Element newElement(String elementName, String structName, Schema t) {
-		Expression seq = _Sequence(_DQuat(), t.getSchemaExpression(), _DQuat(), _S(), _NonTerminal("NAMESEP"), t.next().getSchemaExpression(), _Option(_NonTerminal("VALUESEP")), _S());
+		Expression seq = _Sequence(_DQuat(), t.getSchemaExpression(), _DQuat(), _S(), _NonTerminal("NAMESEP"), _New(_Link(_Value, t.next().getSchemaExpression()), _Tag(elementName)), _Option(_NonTerminal("VALUESEP")), _S());
 		Element element = new Element(elementName, structName, seq, false);
 		gfile.addProduction(null, element.getUniqueName(), seq);
 		return element;
@@ -33,7 +38,7 @@ public class JSONSchemaGrammarGenerator extends SchemaGrammarGenerator {
 	@Override
 	public void newStruct(String structName, Schema t) {
 		Expression[] l = { _OpenWave(), _S(), t.getSchemaExpression(), _S(), _CloseWave(), _S() };
-		gfile.addProduction(null, structName, _Sequence(l));
+		gfile.addProduction(null, structName, _New(_Sequence(l), _Tag(structName)));
 	}
 
 	@Override

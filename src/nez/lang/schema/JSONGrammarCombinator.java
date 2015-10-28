@@ -1,9 +1,14 @@
 package nez.lang.schema;
 
+import nez.ast.Symbol;
 import nez.lang.Expression;
 import nez.lang.GrammarFile;
 
 public class JSONGrammarCombinator extends PredefinedGrammarCombinator {
+
+	static final Symbol _Key = Symbol.tag("key");
+	static final Symbol _Value = Symbol.tag("value");
+
 	public JSONGrammarCombinator(GrammarFile grammar) {
 		super(grammar, "File");
 	}
@@ -14,11 +19,11 @@ public class JSONGrammarCombinator extends PredefinedGrammarCombinator {
 	}
 
 	public final Expression pAny() {
-		return newSequence(_NonTerminal("Member"), _NonTerminal("S"), newOption(_NonTerminal("VALUESEP")));
+		return newSequence(newNew(newLink(_NonTerminal("Member")), _NonTerminal("S"), newOption(_NonTerminal("VALUESEP")), newTagging("Any")));
 	}
 
 	public final Expression pMember() {
-		Expression[] l = { _NonTerminal("String"), _NonTerminal("NAMESEP"), _NonTerminal("Value"), };
+		Expression[] l = { newNew(newLink(_Key, _NonTerminal("String")), _NonTerminal("NAMESEP"), newLink(_Value, _NonTerminal("Value"))) };
 		return newSequence(l);
 	}
 
@@ -28,39 +33,48 @@ public class JSONGrammarCombinator extends PredefinedGrammarCombinator {
 	}
 
 	public final Expression pJSONObject() {
-		Expression[] l = { newByteChar('{'), _NonTerminal("S"), _NonTerminal("Member"), _NonTerminal("S"), newRepetition(_NonTerminal("VALUESEP"), _NonTerminal("Member"), _NonTerminal("S")), newByteChar('}'), };
+		Expression[] l = { newByteChar('{'), _NonTerminal("S"), newNew(newLink(_NonTerminal("Member")), _NonTerminal("S"), newRepetition(_NonTerminal("VALUESEP"), newLink(_NonTerminal("Member"))), newTagging("Object")), _NonTerminal("S"),
+				newByteChar('}'), };
 		return newSequence(l);
 	}
 
 	public final Expression pArray() {
-		Expression[] valueSeq = { _NonTerminal("S"), _NonTerminal("Value"), _NonTerminal("S"), newRepetition(_NonTerminal("VALUESEP"), _NonTerminal("Value")) };
-		Expression[] l = { newByteChar('['), newSequence(valueSeq), _NonTerminal("S"), newByteChar(']') };
+		Expression[] valueSeq = { _NonTerminal("S"), newLink(_NonTerminal("Value")), _NonTerminal("S"), newRepetition(_NonTerminal("VALUESEP"), newLink(_NonTerminal("Value"))) };
+		Expression[] l = { newByteChar('['), newNew(newSequence(valueSeq), newTagging("Array")), _NonTerminal("S"), newByteChar(']') };
 		return newSequence(l);
 	}
 
 	public final Expression pString() {
 		Expression notSeq = newSequence(newNot(newByteChar('"')), newAnyChar());
 		Expression strValue = newChoice(newString("\\\""), newString("\\\\"), notSeq);
-		Expression[] seq = { newByteChar('"'), newRepetition(strValue), newByteChar('"'), _NonTerminal("S") };
+		Expression[] seq = { newByteChar('"'), newNew(newRepetition(strValue), newTagging("String")), newByteChar('"'), _NonTerminal("S") };
 		return newSequence(seq);
 	}
 
 	public final Expression pNumber() {
-		Expression choice = newChoice(newSequence(_NonTerminal("FRAC"), newOption(_NonTerminal("EXP"))), newEmpty());
-		Expression[] l = { newOption(newByteChar('-')), _NonTerminal("INT"), choice, _NonTerminal("S") };
+		return newChoice(_NonTerminal("Integer"), _NonTerminal("Float"));
+	}
+
+	public final Expression pInteger() {
+		Expression[] l = { newNew(newOption(newByteChar('-')), _NonTerminal("INT"), newTagging("Integer")), _NonTerminal("S") };
+		return newSequence(l);
+	}
+
+	public final Expression pFloat() {
+		Expression[] l = { newNew(newOption(newByteChar('-')), _NonTerminal("INT"), _NonTerminal("FRAC"), newOption(_NonTerminal("EXP")), newTagging("Float")), _NonTerminal("S") };
 		return newSequence(l);
 	}
 
 	public final Expression pTrue() {
-		return newString("true");
+		return newNew(newString("true"), newTagging("True"));
 	}
 
 	public final Expression pFalse() {
-		return newString("false");
+		return newNew(newString("false"), newTagging("False"));
 	}
 
 	public final Expression pNull() {
-		return newString("null");
+		return newNew(newString("null"), newTagging("Null"));
 	}
 
 	public final Expression pNAMESEP() {
