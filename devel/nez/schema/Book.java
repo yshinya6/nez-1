@@ -1,15 +1,6 @@
 package nez.schema;
 
-class XML { // built-in type
-
-}
-
-class Catalog {
-	@Schematic
-	public Book[] list;
-}
-
-class Book {
+public class Book {
 	@Schematic
 	public String id;
 	@Schematic
@@ -18,6 +9,15 @@ class Book {
 	public String title;
 	@Schematic
 	public XML desc;
+}
+
+class XMLs { // built-in type
+
+}
+
+class Catalog {
+	@Schematic
+	public Book[] list;
 }
 
 /**
