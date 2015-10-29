@@ -3,6 +3,7 @@ package nez;
 import nez.ast.Symbol;
 import nez.lang.Expression;
 import nez.lang.expr.ExpressionCommons;
+import nez.lang.expr.NonTerminal;
 import nez.util.UList;
 
 public class GrammarBuilder {
@@ -68,12 +69,20 @@ public class GrammarBuilder {
 		return ExpressionCommons.newString(null, value.toString());
 	}
 
-	protected final Expression P(String name) {
+	protected final NonTerminal P(String name) {
 		return g.newNonTerminal(null, name);
 	}
 
 	protected final Expression C(String t) {
 		return ExpressionCommons.newCharSet(null, t);
+	}
+
+	protected final Expression Choice(Expression... l) {
+		UList<Expression> seq = new UList<Expression>(new Expression[8]);
+		for (Expression p : l) {
+			ExpressionCommons.addChoice(seq, p);
+		}
+		return ExpressionCommons.newPchoice(null, seq);
 	}
 
 	protected final Expression R0(Object... args) {
@@ -96,6 +105,10 @@ public class GrammarBuilder {
 		return ExpressionCommons.newPnot(null, S(args));
 	}
 
+	protected final Expression Link(Symbol label, Object... args) {
+		return ExpressionCommons.newTlink(null, label, S(args));
+	}
+
 	protected final Expression New(Object... args) {
 		return S(ExpressionCommons.newTnew(null, 0), S(args), ExpressionCommons.newTcapture(null, 0));
 	}
@@ -114,6 +127,18 @@ public class GrammarBuilder {
 
 	protected final Expression Val(String t) {
 		return ExpressionCommons.newTreplace(null, t);
+	}
+
+	protected final Expression Symbol(String tableName) {
+		return ExpressionCommons.newXsymbol(null, P(tableName));
+	}
+
+	protected final Expression Exists(String table, String symbol) {
+		return ExpressionCommons.newXexists(null, Symbol.tag(table), symbol);
+	}
+
+	protected final Expression Local(String table, Object... args) {
+		return ExpressionCommons.newXlocal(null, Symbol.tag(table), S(args));
 	}
 
 }
