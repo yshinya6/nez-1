@@ -7,8 +7,8 @@ import nez.Grammar;
 import nez.lang.Expression;
 
 public class Schema {
-	ArrayList<Struct> structList;
-	Struct root;
+	private ArrayList<Struct> structList;
+	private Struct root;
 
 	public Schema(Class<?> root) {
 		this.structList = new ArrayList<Struct>();
@@ -34,8 +34,8 @@ public class Schema {
 }
 
 class Struct {
-	ArrayList<Element> members;
-	String name;
+	private ArrayList<Element> members;
+	private String name;
 
 	public Struct(Class<?> c) {
 		this.name = c.getSimpleName();
@@ -57,12 +57,19 @@ class Struct {
 		return this.name;
 	}
 
+	public String getTableName() {
+		return String.format("T%.5h", this);
+	}
+
+	public int getOptionalCount() {
+		return 0;
+	}
 }
 
 class Element {
-	public String name;
-	public String parentName;
-	public Class<?> type;
+	private String name;
+	private String parentName;
+	private Class<?> type;
 
 	public Element(String name, Class<?> type) {
 		this.name = name;
@@ -82,6 +89,18 @@ class Element {
 	@Override
 	public String toString() {
 		return String.format("%s : %s", name, type.getSimpleName());
+	}
+
+	public String getName() {
+		return this.name;
+	}
+
+	public Class<?> getType() {
+		return this.type;
+	}
+
+	public boolean isOptional() {
+		return false;
 	}
 }
 

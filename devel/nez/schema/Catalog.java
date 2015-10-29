@@ -1,23 +1,17 @@
 package nez.schema;
 
-public class Book {
-	@Schematic
-	public String id;
-	@Schematic
-	public String author;
-	@Schematic
-	public String title;
-	@Schematic
-	public XML desc;
-}
-
-class XMLs { // built-in type
-
-}
-
-class Catalog {
+public class Catalog {
 	@Schematic
 	public Book[] list;
+
+	public class Book {
+		@Schematic
+		public String id;
+		@Schematic
+		public String author;
+		@Schematic
+		public String title;
+	}
 }
 
 /**
