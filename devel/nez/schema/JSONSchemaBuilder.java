@@ -39,7 +39,7 @@ public class JSONSchemaBuilder extends SchemaBuilder {
 		String structName = struct.getName();
 		System.out.println(struct.getTableName());
 		Expression e = S(E("{"), P("S"), toSet(struct, S(toMemberList(struct))), P("S"), E("}"), P("S"));
-		define(structName, e);
+		define(structName, New(e, Tag(structName)));
 	}
 
 	protected Expression toSet(Struct s, Expression inner) {
@@ -72,29 +72,31 @@ public class JSONSchemaBuilder extends SchemaBuilder {
 
 	protected void newElement(Element element) {
 		Class<?> type = element.getType();
-		Expression e = null;
+		Expression prefix = S(E("\""), this.toUniq(element), E("\""), P("S"), P("NAMESEP"));
+		Expression suffix = null;
 		if (type.isArray()) {
-			e = toArray(element.getType());
+			suffix = toArray(element.getType());
 		} else if (type.isEnum()) {
-			e = toEnum(type.getEnumConstants());
+			suffix = toEnum(type.getEnumConstants());
 		} else {
-			e = S(E("\""), this.toUniq(element), E("\""), P("S"), P("NAMESEP"), P(type.getSimpleName()), Opt(P("VALUESEP")), P("S"));
+			suffix = S(P(type.getSimpleName()), Opt(P("VALUESEP")), P("S"));
 		}
-		define(element.getUniqueName(), e);
+		define(element.getUniqueName(), S(prefix, New(suffix, Tag(element.getName()))));
 	}
 
-	protected void newSymbols(List<Element> members, String tableName) {
-		Expression[] l = new Expression[members.size()];
-		int index = 0;
-		for (Element e : members) {
-			l[index++] = E(e.getName());
-		}
-		define(tableName, S(l));
+	// TODO
+	protected void newElement(Array element) {
+
+	}
+
+	// TODO
+	protected void newElement(Enum element) {
+
 	}
 
 	protected Expression toArray(Class<?> type) {
 		Expression tExpr = P(type.getSimpleName().replace("[]", ""));
-		return S(E("["), P("S"), tExpr, R0(P("VALUESEP"), tExpr), E("]"));
+		return S(E("["), P("S"), Link(null, tExpr), R0(P("VALUESEP"), Link(null, tExpr)), E("]"));
 	}
 
 	protected Expression toEnum(Object[] candidates) {

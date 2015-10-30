@@ -112,6 +112,22 @@ class Element {
 	}
 }
 
+class Array extends Element {
+
+	public Array(Struct parent, Field element) {
+		super(parent, element);
+	}
+
+}
+
+class Enum extends Element {
+
+	public Enum(Struct parent, Field element) {
+		super(parent, element);
+	}
+
+}
+
 class SchemaWriter {
 
 	Grammar grammar;
