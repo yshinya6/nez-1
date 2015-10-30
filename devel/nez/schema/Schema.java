@@ -17,6 +17,10 @@ public class Schema {
 		extract(root);
 	}
 
+	public Struct getRootStruct() {
+		return this.root;
+	}
+
 	public void addStruct(Class<?> struct) {
 		this.structList.add(new Struct(struct));
 	}
@@ -45,7 +49,7 @@ class Struct {
 
 	public void extract(Class<?> c) {
 		for (Field sub : c.getFields()) {
-			this.members.add(new Element(sub));
+			this.members.add(new Element(this, sub));
 		}
 	}
 
@@ -68,7 +72,7 @@ class Struct {
 
 class Element {
 	private String name;
-	private String parentName;
+	private Struct parent;
 	private Class<?> type;
 
 	public Element(String name, Class<?> type) {
@@ -76,14 +80,14 @@ class Element {
 		this.type = type;
 	}
 
-	public Element(Field element) {
+	public Element(Struct parent, Field element) {
 		this.name = element.getName();
-		this.parentName = element.getDeclaringClass().getSimpleName();
+		this.parent = parent;
 		this.type = element.getType();
 	}
 
 	public String getUniqueName() {
-		return String.format("%s_%s", parentName, name);
+		return String.format("%s_%s", parent.getName(), name);
 	}
 
 	@Override
@@ -97,6 +101,10 @@ class Element {
 
 	public Class<?> getType() {
 		return this.type;
+	}
+
+	public String getTableName() {
+		return this.parent.getTableName();
 	}
 
 	public boolean isOptional() {
