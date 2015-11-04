@@ -13,6 +13,12 @@ public class Catalog {
 		public String author;
 		@Schematic
 		public String title;
+
+		public Book(String id, String author, String title) {
+			this.id = id;
+			this.author = author;
+			this.title = title;
+		}
 	}
 }
 

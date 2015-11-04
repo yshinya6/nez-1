@@ -40,16 +40,20 @@ public class Schema {
 class Struct {
 	private ArrayList<Element> members;
 	private String name;
+	private boolean ordered = false; // default
 
 	public Struct(Class<?> c) {
 		this.name = c.getSimpleName();
 		this.members = new ArrayList<Element>();
+		this.ordered = c.isAnnotationPresent(Ordered.class) ? true : false;
 		extract(c);
 	}
 
 	public void extract(Class<?> c) {
 		for (Field sub : c.getFields()) {
-			this.members.add(new Element(this, sub));
+			if (sub.isAnnotationPresent(Schematic.class)) {
+				this.members.add(new Element(this, sub));
+			}
 		}
 	}
 
@@ -68,12 +72,19 @@ class Struct {
 	public int getOptionalCount() {
 		return 0;
 	}
+
+	public boolean hasOrderedSequence() {
+		return this.ordered;
+	}
 }
 
 class Element {
 	private String name;
 	private Struct parent;
 	private Class<?> type;
+	private boolean optional = false;
+	private Length length;
+	private Range range;
 
 	public Element(String name, Class<?> type) {
 		this.name = name;
@@ -84,6 +95,18 @@ class Element {
 		this.name = element.getName();
 		this.parent = parent;
 		this.type = element.getType();
+		this.optional = element.isAnnotationPresent(Option.class) ? true : false;
+		extractRange(element);
+
+	}
+
+	public void extractRange(Field element) {
+		if (element.isAnnotationPresent(Range.class)) {
+			this.range = element.getAnnotation(Range.class);
+		}
+		if (element.isAnnotationPresent(Length.class)) {
+			this.length = element.getAnnotation(Length.class);
+		}
 	}
 
 	public String getUniqueName() {
@@ -108,7 +131,15 @@ class Element {
 	}
 
 	public boolean isOptional() {
-		return false;
+		return this.optional;
+	}
+
+	public Range getRange() {
+		return this.range;
+	}
+
+	public Length getLength() {
+		return this.length;
 	}
 }
 
