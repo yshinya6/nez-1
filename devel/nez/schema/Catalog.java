@@ -6,8 +6,10 @@ public class Catalog {
 
 	public class Book {
 		@Schematic
+		@Length(max = 10, min = 0)
 		public String id;
 		@Schematic
+		@Enumeration({ "Jane", "John" })
 		public String author;
 		@Schematic
 		public String title;

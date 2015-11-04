@@ -36,16 +36,18 @@ public @interface Schematic {
 @Retention(RetentionPolicy.RUNTIME)
 @Target(value = { FIELD })
 @interface Range {
-	int max = 0;
-	int min = 0;
+	int max();
+
+	int min();
 }
 
 @Documented
 @Retention(RetentionPolicy.RUNTIME)
 @Target(value = { FIELD })
 @interface Length {
-	int max = 0;
-	int min = 0;
+	int max();
+
+	int min();
 }
 
 @Documented
