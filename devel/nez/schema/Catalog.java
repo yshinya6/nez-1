@@ -20,6 +20,10 @@ public class Catalog {
 			this.title = title;
 		}
 	}
+
+	public Catalog(Book[] list) {
+		this.list = list;
+	}
 }
 
 /**
