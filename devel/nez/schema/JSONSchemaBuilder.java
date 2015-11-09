@@ -7,6 +7,9 @@ import nez.lang.Expression;
 
 public class JSONSchemaBuilder extends SchemaBuilder {
 
+	public final static nez.ast.Symbol _name = nez.ast.Symbol.tag("name");
+	public final static nez.ast.Symbol _value = nez.ast.Symbol.tag("value");
+
 	public JSONSchemaBuilder(Grammar g) {
 		super(g);
 		new JSONGrammarCombinator(g);
@@ -29,24 +32,22 @@ public class JSONSchemaBuilder extends SchemaBuilder {
 
 	protected void newRoot(Struct root) {
 		String structName = root.getName();
-		Expression rootExpression = P(structName);
+		Expression rootExpression = Link(null, P(structName));
 		Expression e = S(E("["), P("S"), rootExpression, P("S"), R1(P("VALUESEP"), rootExpression), P("S"), E("]"));
-		define("Root", S(rootExpression, OR, e));
-
+		define("Root", New(S(rootExpression, OR, e), Tag("Source")));
 	}
 
 	protected void newStruct(Struct struct) {
 		String structName = struct.getName();
 		System.out.println(struct.getTableName());
 		Expression e = S(E("{"), P("S"), toSet(struct, S(toMemberList(struct))), P("S"), E("}"), P("S"));
-		define(structName, New(e, Tag(structName)));
+		define(structName, New(e, Val(structName), Tag("Struct")));
 	}
 
 	protected Expression toSet(Struct s, Expression inner) {
 		List<Element> members = s.getMembers();
-		Expression[] l = new Expression[members.size() - s.getOptionalCount() + 1];
-		int index = 1;
-		l[0] = P(s.getName());
+		Expression[] l = new Expression[members.size() - s.getOptionalCount()];
+		int index = 0;
 		for (Element e : s.getMembers()) {
 			if (!e.isOptional()) {
 				l[index++] = Exists(s.getTableName(), e.getName());
@@ -63,7 +64,7 @@ public class JSONSchemaBuilder extends SchemaBuilder {
 		int index = 0;
 		for (Element e : members) {
 			newElement(e);
-			l[index] = Link(null, P(e.getUniqueName()));
+			l[index] = P(e.getUniqueName());
 			symbols[index++] = E(e.getName());
 		}
 		define(struct.getTableName(), Choice(symbols));
@@ -79,9 +80,9 @@ public class JSONSchemaBuilder extends SchemaBuilder {
 		} else if (type.isEnum()) {
 			suffix = toEnum(type.getEnumConstants());
 		} else {
-			suffix = S(P(type.getSimpleName()), Opt(P("VALUESEP")), P("S"));
+			suffix = S(Link(_value, P(type.getSimpleName())), Opt(P("VALUESEP")), P("S"));
 		}
-		define(element.getUniqueName(), S(prefix, New(suffix, Tag(element.getName()))));
+		define(element.getUniqueName(), New(prefix, suffix, Tag("Element")));
 	}
 
 	// TODO
@@ -96,7 +97,7 @@ public class JSONSchemaBuilder extends SchemaBuilder {
 
 	protected Expression toArray(Class<?> type) {
 		Expression tExpr = P(type.getSimpleName().replace("[]", ""));
-		return S(E("["), P("S"), Link(null, tExpr), R0(P("VALUESEP"), Link(null, tExpr)), E("]"));
+		return Link(_value, New(S(E("["), P("S"), Link(null, tExpr), R0(P("VALUESEP"), Link(null, tExpr)), E("]"), Tag("Array"))));
 	}
 
 	protected Expression toEnum(Object[] candidates) {
@@ -109,6 +110,6 @@ public class JSONSchemaBuilder extends SchemaBuilder {
 	}
 
 	protected Expression toUniq(Element e) {
-		return S(And(E(e.getName())), Not(Exists(e.getTableName(), e.getName())), Symbol(e.getTableName()));
+		return S(And(E(e.getName())), Not(Exists(e.getTableName(), e.getName())), Link(_name, Symbol(e.getTableName())));
 	}
 }

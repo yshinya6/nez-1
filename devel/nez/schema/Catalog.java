@@ -4,6 +4,10 @@ public class Catalog {
 	@Schematic
 	public Book[] list;
 
+	public Catalog() {
+
+	}
+
 	public class Book {
 		@Schematic
 		@Length(max = 10, min = 0)
@@ -14,10 +18,8 @@ public class Catalog {
 		@Schematic
 		public String title;
 
-		public Book(String id, String author, String title) {
-			this.id = id;
-			this.author = author;
-			this.title = title;
+		public Book() {
+
 		}
 	}
 
