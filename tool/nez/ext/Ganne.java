@@ -57,8 +57,12 @@ public class Ganne extends GrammarFileLoader {
 	}
 
 	private final void loadPredefinedProduction() {
-		// TODO Auto-generated method stub
-
+		GrammarFileLoader fl = new Gnez();
+		try {
+			fl.load(getGrammar(), "log_pre.nez", Strategy.newSafeStrategy());
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
 	}
 
 	private final Expression visit(Tree<?> node) {
