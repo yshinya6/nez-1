@@ -9,7 +9,9 @@ import nez.ast.Symbol;
 import nez.ast.Tree;
 import nez.lang.Expression;
 import nez.lang.GrammarFileLoader;
+import nez.lang.expr.ExpressionCommons;
 import nez.util.ConsoleUtils;
+import nez.util.UList;
 
 public class Ganne extends GrammarFileLoader {
 
@@ -50,9 +52,7 @@ public class Ganne extends GrammarFileLoader {
 	public void parse(Tree<?> node) {
 		this.loadPredefinedProduction();
 		for (Tree<?> nonterminal : node) {
-			String localName = nonterminal.getText(_Name, "");
-			Expression inner = visit(nonterminal);
-			getGrammarFile().addProduction(null, localName, inner);
+			visit(nonterminal);
 		}
 	}
 
@@ -72,8 +72,14 @@ public class Ganne extends GrammarFileLoader {
 	public class _Nonterminal extends Undefined {
 		@Override
 		public Expression toExpression(Tree<?> node) {
-			// TODO Auto-generated method stub
-			return super.toExpression(node);
+			String localName = node.getText(_Name, "");
+			UList<Expression> l = new UList<Expression>(new Expression[5]);
+			for (Tree<?> content : node.get(_Content)) {
+				l.add(visit(content));
+			}
+			Expression inner = ExpressionCommons.newPsequence(null, l);
+			getGrammarFile().addProduction(null, localName, inner);
+			return inner;
 		}
 	}
 
