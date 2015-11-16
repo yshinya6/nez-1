@@ -11,7 +11,7 @@ public class Catalog {
 	public class Book {
 		@Schematic
 		@Length(max = 10, min = 0)
-		public String id;
+		public Integer id;
 		@Schematic
 		@Enumeration({ "Jane", "John" })
 		public String author;

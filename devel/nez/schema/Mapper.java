@@ -168,12 +168,13 @@ public class Mapper extends VisitorMap<Undefined> {
 			ConsoleUtils.exit(1, sc.getSyntaxErrorMessage());
 		}
 		ConsoleUtils.println("   ", node);
+		System.out.println("");
 		Mapper m = new Mapper(Catalog.class);
 		Catalog catalog = (Catalog) m.visit(node);
 		for (Book book : catalog.list) {
-			System.out.println(book.title);
-			System.out.println(book.id);
-			System.out.println(book.author);
+			System.out.println("title: " + book.title);
+			System.out.println("id: " + book.id);
+			System.out.println("author: " + book.author);
 			System.out.println("");
 		}
 	}
