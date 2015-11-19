@@ -107,7 +107,16 @@ public class NezProfier {
 	public final static void recordLatencyMS(NezProfier rec, String key, long nanoT1, long nanoT2) {
 		if (rec != null) {
 			long t = (nanoT2 - nanoT1) / 1000; // [micro second]
-			rec.setDouble(key + "[ms]", t / 1000.0);
+			key += "[ms]";
+			double time = t / 1000.0;
+			if (!rec.dataPointMap.hasKey(key)) {
+				rec.setDouble(key, time);
+			} else {
+				DataPoint d = rec.dataPointMap.get(key);
+				if ((double) d.value > time) {
+					d.value = time;
+				}
+			}
 		}
 	}
 

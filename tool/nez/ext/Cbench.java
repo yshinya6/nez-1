@@ -16,14 +16,14 @@ public class Cbench extends Command {
 
 	@Override
 	public void exec(CommandContext config) throws IOException {
-		Parser g = config.newParser();
 		int fileIndex = 0;
 
 		while (config.hasInput()) {
+			Parser g = config.newParser();
 			String file = config.getInputFileList().ArrayValues[fileIndex++];
 			Tree<?> prototype = config.getStrategy().isDisabled("ast", true) ? null : new CommonTree();
 			SourceContext input = config.nextInput();
-			for (int i = 0; i < 5; i++) {
+			for (int i = 0; i < 10; i++) {
 				g.perform(new ParsingMachine(), input, prototype);
 				// we assume there is no syntax error
 				if (input.hasUnconsumed()) {
