@@ -7,17 +7,18 @@ import java.util.Map.Entry;
 
 import nez.ast.Symbol;
 import nez.ast.Tree;
-import nez.infer.HistogramBuilder.Undefined;
+import nez.infer.TokenVisitor.Undefined;
 import nez.util.VisitorMap;
 
-public class HistogramBuilder extends VisitorMap<Undefined> {
+public class TokenVisitor extends VisitorMap<Undefined> {
 	Map<String, Histogram> histogramMap;
+	Map<String, Token> tokenMap;
 
-	public HistogramBuilder() {
+	public TokenVisitor() {
 		this.histogramMap = new HashMap<String, Histogram>();
 	}
 
-	public class Undefined implements HistogramSymbol {
+	public class Undefined implements InferenceTokenSymbol {
 		public void accept(Tree<?> node) {
 
 		}
@@ -27,7 +28,7 @@ public class HistogramBuilder extends VisitorMap<Undefined> {
 		find(node.getTag().toString()).accept(node);
 	}
 
-	public List<Histogram> calc(Tree<?> node) {
+	public List<Histogram> parse(Tree<?> node) {
 		visit(node);
 		return null;
 	}
@@ -38,8 +39,8 @@ public class HistogramBuilder extends VisitorMap<Undefined> {
 			for (Tree<?> subnode : node) {
 				visit(subnode);
 			}
-			for (Entry<String, Histogram> histogram : histogramMap.entrySet()) {
-				histogram.getValue().commit();
+			for (Entry<String, Token> token : tokenMap.entrySet()) {
+				token.getValue().getHistogram().commit();
 			}
 		}
 	}
@@ -123,18 +124,17 @@ public class HistogramBuilder extends VisitorMap<Undefined> {
 	}
 
 	private void transaction(String label) {
-		if (!histogramMap.containsKey(label)) {
-			Histogram hist = new Histogram(label);
-			hist.update();
-			histogramMap.put(label, hist);
+		if (!tokenMap.containsKey(label)) {
+			Token token = new Token(label);
+			token.getHistogram().update();
+			tokenMap.put(label, token);
 		} else {
-			histogramMap.get(label).update();
+			tokenMap.get(label).getHistogram().update();
 		}
 	}
-
 }
 
-interface HistogramSymbol {
+interface InferenceTokenSymbol {
 	public final static Symbol _name = Symbol.tag("name");
 	public final static Symbol _value = Symbol.tag("value");
 	public final static Symbol _open = Symbol.tag("open");

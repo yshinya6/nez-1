@@ -16,7 +16,7 @@ Delim	= { [ ,:;\-|_]* #Delim}
 SimpleToken	= BuiltInTypedToken
 			/ PrimaryTypedToken
 			
-MetaToken	= { $(OpenParenthesis) $(SimpleToken) $(CloseParenthesis)  #MetaToken}
+MetaToken	= { $open(OpenParenthesis) $value(SimpleToken) $close(CloseParenthesis)  #MetaToken}
 OpenParenthesis		= { OPEN #OpenParen}
 CloseParenthesis	= { CLOSE #CloseParen}
 
