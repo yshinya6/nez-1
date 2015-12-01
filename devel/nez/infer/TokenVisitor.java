@@ -7,10 +7,9 @@ import java.util.Map.Entry;
 
 import nez.ast.Symbol;
 import nez.ast.Tree;
-import nez.infer.TokenVisitor.Undefined;
-import nez.util.VisitorMap;
+import nez.util.ConsoleUtils;
 
-public class TokenVisitor extends VisitorMap<Undefined> {
+public class TokenVisitor extends nez.util.VisitorMap<nez.infer.TokenVisitor.Undefined> {
 	Map<String, Histogram> histogramMap;
 	Map<String, Token> tokenMap;
 
@@ -20,7 +19,7 @@ public class TokenVisitor extends VisitorMap<Undefined> {
 
 	public class Undefined implements InferenceTokenSymbol {
 		public void accept(Tree<?> node) {
-
+			ConsoleUtils.println(node.formatSourceMessage("error", "unsupproted tag in PEG Learning System #" + node));
 		}
 	}
 
@@ -53,10 +52,17 @@ public class TokenVisitor extends VisitorMap<Undefined> {
 		}
 	}
 
-	public class MetaToken extends Undefined {
+	public class _MetaToken extends Undefined {
 		@Override
 		public void accept(Tree<?> node) {
-			transaction(String.format("%s*%s", node.getText(_open, ""), node.getText(_close, "")));
+			String label = String.format("%s*%s", node.getText(_open, ""), node.getText(_close, ""));
+			if (!tokenMap.containsKey(label)) {
+				MetaToken token = new MetaToken(node);
+				token.getHistogram().update();
+				tokenMap.put(label, token);
+			} else {
+				tokenMap.get(label).getHistogram().update();
+			}
 		}
 	}
 

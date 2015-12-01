@@ -6,14 +6,14 @@ import nez.lang.expr.ExpressionCommons;
 import nez.util.UList;
 
 public class Token implements InferenceTokenSymbol {
-	protected Expression inner;
+	protected Expression expression;
 	protected Histogram histogram;
 
 	public Token() {
 	}
 
 	public Token(String label) {
-		this.inner = ExpressionCommons.newNonTerminal(null, null, label);
+		this.expression = ExpressionCommons.newNonTerminal(null, null, label);
 	}
 
 	public Histogram getHistogram() {
@@ -23,12 +23,16 @@ public class Token implements InferenceTokenSymbol {
 }
 
 class MetaToken extends Token {
+	Tree<?> innerNode;
 
 	public MetaToken(Tree<?> node) {
-		this.inner = parseParendSequence(node);
+		this.innerNode = node;
+		this.expression = parseParenSequence(node);
 	}
 
-	private final Expression parseParendSequence(Tree<?> node) {
+	// FIXME
+	// assume that there is no nested MetaToken
+	private final Expression parseParenSequence(Tree<?> node) {
 		UList<Expression> l = new UList<Expression>(new Expression[3]);
 		l.add(ExpressionCommons.newCharSet(null, node.getText(_open, "")));
 		l.add(ExpressionCommons.newNonTerminal(null, null, node.getText(_value, "")));

@@ -4,28 +4,28 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class Histogram {
-	// a variable 'data' is a list of number of chunk that has the specific
+	// a variable 'data' is a list of numbers of chunk that has the specific
 	// tokens.
 	// This list's index corresponds to the number of occurrences of the token
 	// in a chunk.
 	List<Integer> data;
 	String label; // a label of the target token
-	int tokenCount;
+	int tokenFrequency;
 
 	public Histogram(String label) {
 		this.label = label;
 		this.data = new ArrayList<Integer>();
-		this.tokenCount = 0;
+		this.tokenFrequency = 0;
 	}
 
 	public void commit() {
-		int occurence = this.data.get(tokenCount) + 1;
-		this.data.set(tokenCount, occurence);
-		tokenCount = 0;
+		int chunkCount = this.data.get(tokenFrequency) + 1;
+		this.data.set(tokenFrequency, chunkCount);
+		tokenFrequency = 0;
 	}
 
 	public void update() {
-		this.tokenCount++;
+		this.tokenFrequency++;
 	}
 
 	protected int width() {
