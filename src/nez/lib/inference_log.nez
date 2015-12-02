@@ -6,17 +6,21 @@
 
 File	= { $(Line)* #List }
 
-Line	= { $(Token) ( $(Delim) $(Token))* (NEWLINE / !.) #Chunk }
+Line	= { $(Token)+ (NEWLINE / !.) #Chunk }
 
 Token	= MetaToken
-		/ SimpleToken
+		/ SimpleTokenSequence
 		
-Delim	= { [ ,:;\-|_]* #Delim}
+SimpleTokenSequence	= {  ( $(SimpleToken) / $(Delim)  )+ #Sequence}
+		
+Delim	= { DELIM* #Delim}
+
+DELIM	= [ ,:;\-|_]
 
 SimpleToken	= BuiltInTypedToken
 			/ PrimaryTypedToken
 			
-MetaToken	= { $open(OpenParenthesis) $value(SimpleToken) $close(CloseParenthesis)  #MetaToken}
+MetaToken	= { $open(OpenParenthesis) $value(SimpleToken)? $close(CloseParenthesis)  #MetaToken}
 OpenParenthesis		= { OPEN #OpenParen}
 CloseParenthesis	= { CLOSE #CloseParen}
 
@@ -24,7 +28,7 @@ CloseParenthesis	= { CLOSE #CloseParen}
 PrimaryTypedToken	= Number
 					/ String
 Number	= { '-'? INT (FRAC EXP? #Float / '' #Integer) }
-String	= { ( !OPEN ![\r\n ] . )* #String}
+String	= { ( !OPEN !CLOSE !DELIM ![\r\n ] . )+ #String}
 
 BuiltInTypedToken	= IPAddress
 					/ EmailAddress
@@ -88,10 +92,22 @@ Sat Jun 24 06:38:46 2006
 Sun Feb 25 07:49:57 2007
 ''' 
 example Line '''
-Sat Jun 24 06:38:46 2006 crashdump(2164)
+Sat Jun 24 06:38:46 2006 crashdump(2164):
 '''
 example File '''
 Sat Jun 24 06:38:46 2006 crashdump[2164]: Started writing crash report to: /Logs/Crash/Exit/pro.crash.log
 
 '''
+
+example File '''
+- crashreporterd[120]: mach_msg()
+
+'''
+
+example File '''
+- crashreporterd[120]: mach_msg() reply failed: (ipc/send) invalid destination port
+
+'''
+
+example MetaToken (123)
 
