@@ -6,6 +6,8 @@ import java.util.Map.Entry;
 
 public class TokenSequence {
 	protected Map<String, Token> tokenMap;
+	private int tokenCount = 0;
+	private int maxTokenCount = 0;
 
 	public TokenSequence() {
 		this.tokenMap = new HashMap<String, Token>();
@@ -15,29 +17,50 @@ public class TokenSequence {
 		return tokenMap;
 	}
 
-	public final void transaction(String label) {
+	public int getMaxTokenSize() {
+		return this.maxTokenCount;
+	}
+
+	// public final void transaction(String label) {
+	// if (!tokenMap.containsKey(label)) {
+	// Token token = new Token(label, this.totalNumOfChunks);
+	// token.getHistogram().update(tokenCount++);
+	// tokenMap.put(label, token);
+	// } else {
+	// tokenMap.get(label).getHistogram().update(tokenCount++);
+	// }
+	// }
+
+	public final void transaction(String label, Token token) {
 		if (!tokenMap.containsKey(label)) {
-			Token token = new Token(label);
-			token.getHistogram().update();
+			token.getHistogram().update(tokenCount++);
 			tokenMap.put(label, token);
 		} else {
-			tokenMap.get(label).getHistogram().update();
+			tokenMap.get(label).getHistogram().update(tokenCount++);
 		}
 	}
 
 	public final Token[] getTokenList() {
-		return (Token[]) this.tokenMap.values().toArray();
+		Token[] tokenList = new Token[this.tokenMap.size()];
+		int index = 0;
+		for (Entry<String, Token> entry : this.tokenMap.entrySet()) {
+			tokenList[index++] = entry.getValue();
+		}
+		normalizeAllHistograms(tokenList);
+		return tokenList;
 	}
 
 	public final void commitAllHistograms() {
 		for (Entry<String, Token> token : this.tokenMap.entrySet()) {
 			token.getValue().getHistogram().commit();
 		}
+		this.maxTokenCount = this.maxTokenCount < tokenCount ? tokenCount : maxTokenCount;
+		tokenCount = 0;
 	}
 
-	public final void normalizeAllHistograms() {
-		for (Entry<String, Token> token : this.tokenMap.entrySet()) {
-			token.getValue().getHistogram().normalize();
+	private final void normalizeAllHistograms(Token[] tokenList) {
+		for (Token token : tokenList) {
+			token.getHistogram().normalize();
 		}
 	}
 

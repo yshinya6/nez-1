@@ -1,24 +1,31 @@
 package nez.infer;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
 
 public class Histogram {
 
-	private List<Integer> dataCollections;
 	private List<DataUnit> dataUnits;
+	private Map<Integer, DataUnit> dataMap; // key: token frequency
+	private List<Integer> orderIdList;
 	private String label; // a label of the target token
 	private int tmpTokenFrequency;
+	private int totalNumOfChunks;
 
-	public Histogram(String label) {
+	public Histogram(String label, int totalNumOfChunks) {
 		this.label = label;
-		this.dataCollections = new ArrayList<Integer>();
-		this.dataUnits = new ArrayList<DataUnit>();
+		this.totalNumOfChunks = totalNumOfChunks;
+		this.dataMap = new HashMap<Integer, DataUnit>();
 		this.tmpTokenFrequency = 0;
+		this.orderIdList = new ArrayList<Integer>();
 	}
 
-	public Histogram(String label, List<DataUnit> dataUnits) {
+	public Histogram(String label, int totalNumOfChunks, List<DataUnit> dataUnits) {
 		this.label = label;
+		this.totalNumOfChunks = totalNumOfChunks;
 		this.dataUnits = dataUnits;
 	}
 
@@ -26,22 +33,36 @@ public class Histogram {
 		return this.label;
 	}
 
+	public final List<Integer> getOrderIdList() {
+		return this.orderIdList;
+	}
+
 	public final void commit() {
-		int chunkCount = this.dataCollections.get(tmpTokenFrequency) + 1;
-		this.dataCollections.set(tmpTokenFrequency, chunkCount);
-		tmpTokenFrequency = 0;
+		if (!this.dataMap.containsKey(tmpTokenFrequency)) {
+			this.dataMap.put(tmpTokenFrequency, new DataUnit(tmpTokenFrequency));
+		}
+		this.dataMap.get(tmpTokenFrequency).updateChunkCount();
+		this.tmpTokenFrequency = 0;
+
 	}
 
 	public void update() {
 		this.tmpTokenFrequency++;
 	}
 
-	private final int width() {
-		return this.dataUnits.size() - 1;
+	public void update(int id) {
+		this.tmpTokenFrequency++;
+		if (!orderIdList.contains(id)) {
+			this.orderIdList.add(id);
+		}
 	}
 
-	private final int wholeSize() {
+	public final int width() {
 		return this.dataUnits.size();
+	}
+
+	private final int wholeChunkSize() {
+		return this.totalNumOfChunks;
 	}
 
 	public void normalize() {
@@ -50,12 +71,9 @@ public class Histogram {
 	}
 
 	private final void newDataUnits() {
-		this.dataUnits.add(new DataUnit(0, this.dataCollections.get(0)));
-		for (int i = 1; i < this.dataCollections.size(); i++) {
-			int chunkCount = this.dataCollections.get(i);
-			if (chunkCount != 0) {
-				this.dataUnits.add(new DataUnit(i, chunkCount));
-			}
+		this.dataUnits = new ArrayList<DataUnit>();
+		for (Entry<Integer, DataUnit> unit : dataMap.entrySet()) {
+			dataUnits.add(unit.getValue());
 		}
 	}
 
@@ -72,19 +90,19 @@ public class Histogram {
 	}
 
 	private final int getChunkCountI(int idx) {
-		return idx < this.width() ? this.dataUnits.get(idx).getTokenFrequency() : 0;
+		return idx < this.width() ? this.dataUnits.get(idx).getChunkCount() : 0;
 	}
 
 	private final double getChunkCountF(int idx) {
-		return idx < this.width() ? this.dataUnits.get(idx).getTokenFrequency() : 0;
+		return idx < this.width() ? this.dataUnits.get(idx).getChunkCount() : 0;
 	}
 
 	public final double residualMass(int idx) {
-		int rm = this.wholeSize();
-		for (int i = idx; i >= 0; i--) {
-			rm -= this.getChunkCountI(i);
+		int rm = 0;
+		for (int i = idx + 1; i < this.width(); i++) {
+			rm += this.getChunkCountI(i);
 		}
-		return (double) rm / this.wholeSize();
+		return (double) rm / this.wholeChunkSize();
 	}
 
 	public final double coverage() {
@@ -92,7 +110,9 @@ public class Histogram {
 		for (int i = 0; i < this.width(); i++) {
 			cov += this.getChunkCountI(i);
 		}
-		return cov / this.wholeSize();
+		// System.out.println(String.format("%s : %s,%s", this.getLabel(), cov,
+		// this.wholeChunkSize()));
+		return cov / this.wholeChunkSize();
 	}
 
 	protected static double calcRelativeEntropy(Histogram h1, Histogram h2) {
@@ -101,8 +121,11 @@ public class Histogram {
 		for (int i = 0; i < h1.width(); i++) {
 			f1 = h1.getChunkCountF(i);
 			f2 = h2.getChunkCountF(i);
-			relativeEntropy += (f1 / h1.wholeSize()) * Math.log(f1 / f2);
+			// System.out.println(String.format("%s : %s,%s,%s", h1.getLabel(),
+			// h1.wholeChunkSize(), f1, f2));
+			relativeEntropy += (f1 / h1.wholeChunkSize()) * Math.log(f1 / f2);
 		}
+		// System.out.println(relativeEntropy);
 		return relativeEntropy;
 	}
 
@@ -122,17 +145,23 @@ public class Histogram {
 			newBody.add(new DataUnit(0, sums[i] / 2));
 		}
 		String label = String.format("AVE_%s_%s", h1.getLabel(), h2.getLabel());
-		return new Histogram(label, newBody);
+		return new Histogram(label, h1.totalNumOfChunks, newBody);
 	}
 }
 
 class DataUnit {
 	private final int tokenFrequency;
-	private final int chunkCount;
+	private int chunkCount;
+	private List<Integer> orderIdList;
 
-	DataUnit(int tokenFrequency, int chunkCount) {
+	public DataUnit(int tokenFrequency, int chunkCount) {
 		this.tokenFrequency = tokenFrequency;
 		this.chunkCount = chunkCount;
+	}
+
+	public DataUnit(int tokenFrequency) {
+		this.tokenFrequency = tokenFrequency;
+		this.chunkCount = 0;
 	}
 
 	public int getTokenFrequency() {
@@ -141,5 +170,17 @@ class DataUnit {
 
 	public int getChunkCount() {
 		return chunkCount;
+	}
+
+	public void setOrderIdList(List<Integer> list) {
+		this.orderIdList = list;
+	}
+
+	public List<Integer> getOrderIdList() {
+		return this.orderIdList;
+	}
+
+	public void updateChunkCount() {
+		this.chunkCount++;
 	}
 }

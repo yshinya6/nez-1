@@ -1,5 +1,6 @@
 package nez.infer;
 
+import nez.Grammar;
 import nez.ast.Tree;
 import nez.lang.Expression;
 import nez.lang.expr.ExpressionCommons;
@@ -9,12 +10,9 @@ public class Token implements InferenceTokenSymbol {
 	protected String label;
 	protected Histogram histogram;
 
-	public Token() {
-	}
-
-	public Token(String label) {
+	public Token(String label, int totalNumOfChunks) {
 		this.label = label;
-		this.histogram = new Histogram(label);
+		this.histogram = new Histogram(label, totalNumOfChunks);
 	}
 
 	public Histogram getHistogram() {
@@ -26,32 +24,53 @@ public class Token implements InferenceTokenSymbol {
 		return Histogram.calcSimilarity(this.histogram, target.getHistogram());
 	}
 
-	public Expression getExpression() {
-		return ExpressionCommons.newNonTerminal(null, null, this.label);
+	public Expression getExpression(Grammar g) {
+		return ExpressionCommons.newNonTerminal(null, g, this.label);
+	}
+
+	@Override
+	public String toString() {
+		return this.label;
 	}
 }
 
 class DelimToken extends Token {
+
+	public DelimToken(String label, int totalNumOfChunks) {
+		super(label, totalNumOfChunks);
+	}
+
 	@Override
-	public Expression getExpression() {
-		return ExpressionCommons.newCharSet(null, this.label);
+	public Expression getExpression(Grammar g) {
+		return ExpressionCommons.newString(null, this.label);
+	}
+
+	@Override
+	public String toString() {
+		return String.format("\"%s\"", this.label);
 	}
 }
 
 class MetaToken extends Token {
 	Tree<?> innerNode;
 
-	public MetaToken(Tree<?> node) {
+	public MetaToken(String label, int totalNumOfChunks, Tree<?> node) {
+		super(label, totalNumOfChunks);
 		this.innerNode = node;
+	}
+
+	@Override
+	public Expression getExpression(Grammar g) {
+		return this.getExpression(innerNode, g);
 	}
 
 	// FIXME
 	// assume that there is no nested MetaToken
-	public Expression getExpression(Tree<?> node) {
+	public Expression getExpression(Tree<?> node, Grammar g) {
 		UList<Expression> l = new UList<Expression>(new Expression[3]);
-		l.add(ExpressionCommons.newCharSet(null, node.getText(_open, "")));
-		l.add(ExpressionCommons.newNonTerminal(null, null, node.getText(_value, "")));
-		l.add(ExpressionCommons.newCharSet(null, node.getText(_close, "")));
+		l.add(ExpressionCommons.newString(null, node.getText(_open, "")));
+		l.add(ExpressionCommons.newNonTerminal(null, g, node.get(_value).getTag().toString()));
+		l.add(ExpressionCommons.newString(null, node.getText(_close, "")));
 		return ExpressionCommons.newPsequence(null, l);
 	}
 }

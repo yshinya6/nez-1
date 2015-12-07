@@ -2,7 +2,6 @@ package nez.infer;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 
 import nez.ast.Symbol;
 import nez.ast.Tree;
@@ -11,8 +10,10 @@ import nez.util.ConsoleUtils;
 public class TokenVisitor extends nez.util.VisitorMap<nez.infer.TokenVisitor.Undefined> {
 	List<TokenSequence> sequenceList;
 	int currentSequenceNumber;
+	int totalNumOfChunk = 0;
 
 	public TokenVisitor() {
+		init(TokenVisitor.class, new Undefined());
 		this.sequenceList = new ArrayList<TokenSequence>();
 		this.currentSequenceNumber = 0;
 	}
@@ -39,20 +40,11 @@ public class TokenVisitor extends nez.util.VisitorMap<nez.infer.TokenVisitor.Und
 		find(node.getTag().toString()).accept(node, seq);
 	}
 
-	// public Token[] parse(Tree<?> node) {
-	// for (Tree<?> seq : node) {
-	// visit(seq);
-	// }
-	// Token[] tokenList = this.getTokenList();
-	// for (Token token : tokenList) {
-	// token.getHistogram().normalize();
-	// }
-	// return tokenList;
-	// }
-
 	public List<TokenSequence> parse(Tree<?> node) {
+		this.totalNumOfChunk = node.size();
 		for (Tree<?> chunk : node) {
 			visit(chunk);
+			currentSequenceNumber = 0;
 		}
 		return this.sequenceList;
 	}
@@ -82,46 +74,25 @@ public class TokenVisitor extends nez.util.VisitorMap<nez.infer.TokenVisitor.Und
 		@Override
 		public void accept(Tree<?> node) {
 			TokenSequence seq = sequenceList.get(currentSequenceNumber++);
-			this.transaction(node, seq);
+			String label = String.format("%s*%s", node.get(_open).toText(), node.get(_close).toText());
+			seq.transaction(label, new MetaToken(label, totalNumOfChunk, node));
 			seq.commitAllHistograms();
-		}
-
-		private final void transaction(Tree<?> node, TokenSequence seq) {
-			String label = String.format("%s*%s", node.get(_open), node.get(_close));
-			Map<String, Token> tokenMap = seq.getTokenMap();
-			if (!tokenMap.containsKey(label)) {
-				MetaToken token = new MetaToken(node);
-				token.getHistogram().update();
-				tokenMap.put(label, token);
-			} else {
-				tokenMap.get(label).getHistogram().update();
-			}
 		}
 	}
 
 	public class Delim extends Undefined {
 		@Override
 		public void accept(Tree<?> node, TokenSequence seq) {
-			this.transaction(node, seq);
-		}
-
-		private final void transaction(Tree<?> node, TokenSequence seq) {
 			String label = node.toText();
-			Map<String, Token> tokenMap = seq.getTokenMap();
-			if (!tokenMap.containsKey(label)) {
-				DelimToken token = new DelimToken();
-				token.getHistogram().update();
-				tokenMap.put(label, token);
-			} else {
-				tokenMap.get(label).getHistogram().update();
-			}
+			seq.transaction(label, new DelimToken(label, totalNumOfChunk));
 		}
 	}
 
 	public class SimpleToken extends Undefined {
 		@Override
 		public void accept(Tree<?> node, TokenSequence seq) {
-			seq.transaction(node.getTag().toString());
+			String label = node.getTag().toString();
+			seq.transaction(label, new Token(label, totalNumOfChunk));
 		}
 	}
 
