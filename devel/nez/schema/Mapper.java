@@ -9,7 +9,6 @@ import java.util.HashMap;
 import nez.Grammar;
 import nez.Parser;
 import nez.Strategy;
-import nez.ast.Symbol;
 import nez.ast.Tree;
 import nez.io.SourceContext;
 import nez.schema.Catalog.Book;
@@ -21,9 +20,6 @@ public class Mapper extends VisitorMap<Undefined> {
 	private Class<?> schema;
 	private Object root;
 	private HashMap<String, Class<?>> classMap;
-
-	public static final Symbol _name = Symbol.tag("name");
-	public static final Symbol _value = Symbol.tag("value");
 
 	public Mapper(Class<?> schema) {
 		this.schema = schema;
@@ -38,7 +34,7 @@ public class Mapper extends VisitorMap<Undefined> {
 		return find(node.getTag().toString()).accept(node);
 	}
 
-	public class Undefined {
+	public class Undefined implements SchemaBuilderSymbols {
 		public Object accept(Tree<?> node) {
 			ConsoleUtils.println("undefined: " + node);
 			return null;

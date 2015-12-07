@@ -7,9 +7,6 @@ import nez.lang.Expression;
 
 public class JSONSchemaBuilder extends SchemaBuilder {
 
-	public final static nez.ast.Symbol _name = nez.ast.Symbol.tag("name");
-	public final static nez.ast.Symbol _value = nez.ast.Symbol.tag("value");
-
 	public JSONSchemaBuilder(Grammar g) {
 		super(g);
 		new JSONGrammarCombinator(g);

@@ -3,7 +3,7 @@ package nez.schema;
 import nez.Grammar;
 import nez.GrammarBuilder;
 
-public abstract class SchemaBuilder extends GrammarBuilder {
+public abstract class SchemaBuilder extends GrammarBuilder implements SchemaBuilderSymbols {
 
 	Format format;
 
