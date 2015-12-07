@@ -1,13 +1,9 @@
 package nez.schema;
 
 import nez.Grammar;
-import nez.ast.Symbol;
 import nez.lang.Expression;
 
 public class JSONGrammarCombinator extends PredefinedGrammarCombinator {
-
-	static final Symbol _Key = Symbol.tag("key");
-	static final Symbol _Value = Symbol.tag("value");
 
 	public JSONGrammarCombinator(Grammar grammar) {
 		super(grammar, "File");

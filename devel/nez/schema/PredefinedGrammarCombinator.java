@@ -5,12 +5,13 @@ import java.lang.reflect.Method;
 
 import nez.Grammar;
 import nez.Verbose;
+import nez.ast.Symbol;
 import nez.lang.Expression;
 import nez.lang.GrammarHacks;
 import nez.lang.Production;
 import nez.lang.expr.ExpressionCommons;
 
-public abstract class PredefinedGrammarCombinator extends GrammarHacks {
+public abstract class PredefinedGrammarCombinator extends GrammarHacks implements PredefinedGrammarSymbols {
 	Grammar grammar;
 
 	public PredefinedGrammarCombinator(Grammar grammar, String start) {
@@ -75,4 +76,9 @@ public abstract class PredefinedGrammarCombinator extends GrammarHacks {
 		return 0;
 	}
 
+}
+
+interface PredefinedGrammarSymbols {
+	static final Symbol _Key = Symbol.tag("key");
+	static final Symbol _Value = Symbol.tag("value");
 }
