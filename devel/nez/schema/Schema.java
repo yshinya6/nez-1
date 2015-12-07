@@ -143,6 +143,7 @@ class Element {
 	}
 }
 
+// TODO
 class Array extends Element {
 
 	public Array(Struct parent, Field element) {
@@ -151,6 +152,7 @@ class Array extends Element {
 
 }
 
+// TODO
 class Enum extends Element {
 
 	public Enum(Struct parent, Field element) {
