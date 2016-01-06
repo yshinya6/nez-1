@@ -11,6 +11,7 @@ import nez.lang.ast.NezGrammarCombinator;
 import nez.parser.Parser;
 import nez.parser.ParserStrategy;
 import nez.tool.ast.CommandContext;
+import nez.tool.ast.SimpleTreeJSONWriter;
 import nez.tool.ast.TreeJSONWriter;
 import nez.tool.ast.TreeWriter;
 import nez.tool.ast.TreeXMLWriter;
@@ -234,6 +235,8 @@ public abstract class Command {
 			return new TreeWriter();
 		case "xml":
 			return new TreeXMLWriter();
+		case "simplejson":
+			return new SimpleTreeJSONWriter();
 		case "json":
 			return new TreeJSONWriter();
 		}
