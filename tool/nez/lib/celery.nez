@@ -19,7 +19,10 @@ ClassDeclaration
 	= { 'struct' _ $name(Name) _ '=' _ $list(ClassMembers) #Struct} _
 
 ClassMembers
-	= $(TypedParameter / UntypedParameter)+ 
+	= { $(ClassMember)+ #List}
+	
+ClassMember
+	= TypedParameter / UntypedParameter
 
 TypedParameter
 	=  { $name(Name) qualifier ':' _ $type(TypeDeclaration) $value(DefaultValue) } _ 

@@ -94,7 +94,7 @@ public class JSONPredefinedGrammarLoader extends PredefinedGrammarLoader {
 	}
 
 	public final Expression pINT() {
-		Expression[] l = { newByte(null, '0'), newSequence(newCharSet(null, null, "1-9"), newZeroMore(null, _NonTerminal("DIGIT"))) };
+		Expression[] l = { newByte(null, '0'), newSequence(newCharSet(null, "1-9"), newZeroMore(null, _NonTerminal("DIGIT"))) };
 		return newChoice(l);
 	}
 
