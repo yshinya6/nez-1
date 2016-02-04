@@ -52,7 +52,7 @@ public class JSONSchemaGrammarGenerator extends AbstractSchemaGrammarGenerator i
 	@Override
 	public Schema newTArray(Schema t) {
 		Expression tExpr = t.getSchemaExpression();
-		Expression[] array = { _OpenSquare(), _S(), tExpr, _ZeroMore(_NonTerminal("VALUESEP"), tExpr), _CloseSquare() };
+		Expression[] array = { _OpenSquare(), _S(), _New(_Link(null, tExpr), _ZeroMore(_NonTerminal("VALUESEP"), _Link(null, tExpr))), _CloseSquare() };
 		return new Schema(_Sequence(array));
 	}
 

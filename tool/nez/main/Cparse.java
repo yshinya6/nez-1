@@ -5,6 +5,7 @@ import java.io.IOException;
 import nez.ast.Source;
 import nez.ast.Tree;
 import nez.parser.Parser;
+import nez.parser.ParserProfiler;
 import nez.tool.ast.TreeWriter;
 
 public class Cparse extends Command {
@@ -20,26 +21,26 @@ public class Cparse extends Command {
 				parser.showErrors();
 				continue;
 			}
-			// if (node != null) {
-			// //record(parser.getProfiler(), node);
-			// parser.logProfiler();
-			if (this.outputDirectory != null) {
-				tw.init(getOutputFileName(input, tw.getFileExtension()));
+			if (node != null) {
+				record(parser.getProfiler(), node);
+				parser.logProfiler();
+				if (this.outputDirectory != null) {
+					tw.init(getOutputFileName(input, tw.getFileExtension()));
+				}
+				tw.writeTree(node);
 			}
-			tw.writeTree(node);
-			// }
 		}
 	}
 
-	// private void record(ParserProfier prof, Tree<?> node) {
-	// if (prof != null) {
-	// System.gc();
-	// prof.setCount("O.Size", node.countSubNodes());
-	// long t1 = System.nanoTime();
-	// Tree<?> t = node.dup();
-	// long t2 = System.nanoTime();
-	// ParserProfier.recordLatencyMS(prof, "O.Overhead", t1, t2);
-	// }
-	// }
+	private void record(ParserProfiler prof, Tree<?> node) {
+		if (prof != null) {
+			System.gc();
+			prof.setCount("O.Size", node.countSubNodes());
+			long t1 = System.nanoTime();
+			Tree<?> t = node.dup();
+			long t2 = System.nanoTime();
+			ParserProfiler.recordLatencyMS(prof, "O.Overhead", t1, t2);
+		}
+	}
 
 }
