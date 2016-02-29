@@ -45,7 +45,11 @@ public class JavaParserGenerator extends CommonParserGenerator {
 			Statement("System.out.println(t)");
 		}
 		EndDecl();
-
+		BeginDecl("public final static boolean start(ParserContext<?> c)");
+		{
+			Return(_funccall(_funcname(g.getStartProduction())));
+		}
+		EndDecl();
 		EndDecl(); // end of class
 		file.writeIndent("/*EOF*/");
 	}
