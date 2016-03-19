@@ -217,7 +217,9 @@ public abstract class AbstractSchemaGrammarGenerator implements SchemaGrammarGen
 
 	@Override
 	public Schema newUniq(String elementName, Schema t) {
-		Expression expr = _Sequence(_And(_String(elementName)), _Not(_Exists(getTableName(), elementName)), _Def(getTableName()));
+		Expression expr = _Sequence(_Not(_Exists(getTableName(), elementName)), _Def(getTableName()));
+		// Expression expr = _Sequence(_And(_String(elementName)),
+		// _Not(_Exists(getTableName(), elementName)), _Def(getTableName()));
 		return new Schema(expr, t);
 	}
 
